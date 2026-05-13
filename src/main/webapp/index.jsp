@@ -1,20 +1,47 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@taglib prefix="c" uri="jakarta.tags.core"%>
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Trang chủ</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    </head>
-    <body class="d-flex flex-column min-vh-100">
-        <jsp:include page="includes/header.jsp" />
-        <main class="flex-grow-1">
-            <div class="container mt-5 text-center">
-                <h1 class="display-4">Chào mừng bạn đến với Khách sạn của chúng tôi</h1>
-                <p class="lead">Trải nghiệm kỳ nghỉ tuyệt vời với dịch vụ đẳng cấp.</p>
-                <hr class="my-4">
-                <a href="#" class="btn btn-primary btn-lg">Xem danh sách phòng</a>
-            </div>
-        </main>
-        <jsp:include page="includes/footer.jsp" />
-    </body>
+<head>
+    <meta charset="UTF-8">
+    <title>Hotel Management System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
+    <style>
+        .welcome-screen {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: var(--primary);
+            color: white;
+        }
+        .loader {
+            border: 4px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top: 4px solid white;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="welcome-screen">
+        <div class="loader"></div>
+        <h2>Đang kết nối hệ thống...</h2>
+        
+        <c:choose>
+            <c:when test="${not empty sessionScope.account}">
+                <script>setTimeout(() => { window.location.href = 'rooms'; }, 500);</script>
+            </c:when>
+            <c:otherwise>
+                <script>setTimeout(() => { window.location.href = 'login'; }, 500);</script>
+            </c:otherwise>
+        </c:choose>
+    </div>
+</body>
 </html>
