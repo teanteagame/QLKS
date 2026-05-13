@@ -43,9 +43,7 @@ public class EmployeeManageServlet extends HttpServlet
                 response.sendRedirect(request.getContextPath() + "/employee-management?action=showInactive");
                 return;
             }
-
-            // 3. Xử lý hiển thị danh sách nhân viên đã nghỉ
-            // Trong phương thức doGet của EmployeeManageServlet.java
+           
             if ("showInactive".equals(action))
             {
                 request.setAttribute("isInactiveView", true);

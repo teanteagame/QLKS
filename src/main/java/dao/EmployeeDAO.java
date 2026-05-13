@@ -191,7 +191,6 @@ public class EmployeeDAO {
         }
     }
     
-    // Thêm vào EmployeeDAO.java
     public boolean updatePassword(int employeeId, String newPassword) {
     String sql = "UPDATE accounts SET password_hash = ? WHERE employee_id = ?";
     try (Connection conn = DatabaseConnect.getConnection();

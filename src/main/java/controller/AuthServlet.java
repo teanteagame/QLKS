@@ -64,10 +64,10 @@ public class AuthServlet extends HttpServlet
 
         Account account
                 = accountDAO.login(username, password);
-
+        
         if (account != null)
         {
-
+            String empName = accountDAO.getEmployeeName(username, password);
             HttpSession session
                     = request.getSession();
 
@@ -76,6 +76,8 @@ public class AuthServlet extends HttpServlet
                     account
             );
 
+            session.setAttribute("employeeWorking", empName);
+            
             session.setAttribute(
                     "role",
                     account.getRoleName()

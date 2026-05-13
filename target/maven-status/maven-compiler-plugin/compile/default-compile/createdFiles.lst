@@ -32,7 +32,6 @@ model\RoomType.class
 com\mycompany\qlks\resources\JakartaEE11Resource.class
 model\Service.class
 controller\RoomManageServlet.class
-utils\ValidationUtils.class
 dao\RoomDAO.class
 dao\ServiceDAO.class
 dao\EmployeeDAO.class
