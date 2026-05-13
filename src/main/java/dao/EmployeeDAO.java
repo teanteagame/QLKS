@@ -190,4 +190,18 @@ public class EmployeeDAO {
             if (conn != null) conn.close();
         }
     }
+    
+    // Thêm vào EmployeeDAO.java
+    public boolean updatePassword(int employeeId, String newPassword) {
+    String sql = "UPDATE accounts SET password_hash = ? WHERE employee_id = ?";
+    try (Connection conn = DatabaseConnect.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setString(1, newPassword); // Hiện tại bạn đang dùng plain text theo PasswordUtils
+        ps.setInt(2, employeeId);
+        return ps.executeUpdate() > 0;
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return false;
+}
 }

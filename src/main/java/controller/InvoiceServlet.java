@@ -11,38 +11,64 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import model.BookingDetail;
 import model.Invoice;
+import java.util.*;
 
 @WebServlet(name = "InvoiceServlet", urlPatterns = {"/invoice"})
 public class InvoiceServlet extends HttpServlet {
 
    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
-            throws ServletException, IOException {
-        try {
-            int bookingId = Integer.parseInt(request.getParameter("bookingId"));
-            RoomDAO roomDAO = new RoomDAO();
-            BookingDetail detail = roomDAO.getBookingDetail(bookingId); // Đã JOIN room_types
+protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+        throws ServletException, IOException {
+    try {
+        // 1. Lấy mã đặt phòng từ tham số request
+        int bookingId = Integer.parseInt(request.getParameter("bookingId"));
+        
+        // 2. Lấy thông tin chi tiết đặt phòng (bao gồm thông tin Phòng và Loại phòng)
+        RoomDAO roomDAO = new RoomDAO();
+        BookingDetail detail = roomDAO.getBookingDetail(bookingId); 
+        
+        if (detail != null) {
+            // 3. Tính toán tiền phòng tự động dựa trên thời gian thực tế
+            long checkInTime = detail.getCheckIn().getTime();
+            long currentTime = System.currentTimeMillis();
+            long duration = currentTime - checkInTime;
             
-            if (detail != null) {
-                // Tính toán tiền phòng tự động
-                long duration = System.currentTimeMillis() - detail.getCheckIn().getTime();
-                double roomTotal = detail.getRoomPrice();
-                
-                if (detail.getRentalTypeId() == 1) { // Tính theo giờ
-                    long hours = duration / (1000 * 60 * 60);
-                    if (hours > 1) roomTotal = hours * detail.getRoomPrice();
+            double roomTotal = detail.getRoomPrice(); // Giá mặc định của loại phòng
+            
+            // Logic tính tiền theo giờ (Rental Type ID = 1)
+            if (detail.getRentalTypeId() == 1) { 
+                long hours = duration / (1000 * 60 * 60);
+                // Nếu ở quá 1 giờ thì tính theo đơn giá nhân số giờ
+                if (hours > 1) {
+                    roomTotal = hours * detail.getRoomPrice();
                 }
-
-                ServiceDAO serviceDAO = new ServiceDAO();
-                double serviceTotal = serviceDAO.getTotalServiceMoneyByBookingId(bookingId);
-
-                request.setAttribute("detail", detail);
-                request.setAttribute("calculatedRoomTotal", roomTotal);
-                request.setAttribute("serviceTotal", serviceTotal);
-                request.getRequestDispatcher("view/invoice.jsp").forward(request, response);
             }
-        } catch (Exception e) { response.sendRedirect("rooms"); }
+
+            // 4. Xử lý dữ liệu dịch vụ (Cập nhật để hiển thị minh bạch)
+            ServiceDAO serviceDAO = new ServiceDAO();
+            
+            // Lấy danh sách chi tiết từng món (Sử dụng Inner Class đã tạo trong ServiceDAO)
+            List<ServiceDAO.ServiceUsage> serviceUsageList = serviceDAO.getServiceUsageDetails(bookingId);
+            
+            // Lấy tổng tiền dịch vụ để hiển thị và lưu trữ
+            double serviceTotal = serviceDAO.getTotalServiceMoneyByBookingId(bookingId);
+
+            // 5. Đẩy toàn bộ dữ liệu sang JSP để hiển thị
+            request.setAttribute("detail", detail); // Thông tin khách và phòng
+            request.setAttribute("calculatedRoomTotal", roomTotal); // Tiền phòng đã tính toán
+            request.setAttribute("serviceUsageList", serviceUsageList); // CHI TIẾT: Nước, Cola...
+            request.setAttribute("serviceTotal", serviceTotal); // Tổng cộng tiền dịch vụ
+
+            // 6. Chuyển hướng đến trang hóa đơn
+            request.getRequestDispatcher("view/invoice.jsp").forward(request, response);
+        } else {
+            response.sendRedirect("rooms");
+        }
+    } catch (Exception e) { 
+        // Trả về trang sơ đồ phòng nếu có lỗi xảy ra
+        response.sendRedirect("rooms"); 
     }
+}
     
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 

@@ -1,6 +1,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="jakarta.tags.core"%>
 
+<%-- Sử dụng class .sidebar đã có trong CSS --%>
 <nav class="sidebar">
     <div class="sidebar-header">
         <span class="hotel-icon">🏨</span>
@@ -8,11 +9,15 @@
     </div>
 
     <div class="user-info">
-        <p class="welcome-text">Chào, <strong>${sessionScope.account.username}</strong></p>
-        <span class="role-badge">${sessionScope.role}</span>
+        <p class="welcome-text" style="margin-bottom: 8px;">Chào, <strong>${sessionScope.account.username}</strong></p>
+        <%-- Tận dụng class .badge có sẵn để hiển thị vai trò --%>
+        <span class="badge" style="background: rgba(255,255,255,0.2); color: white; text-transform: uppercase;">
+            ${sessionScope.role}
+        </span>
     </div>
 
     <div class="menu-items">
+        <%-- Class .menu-link và trạng thái .active đã được định nghĩa trong CSS --%>
         <a href="${pageContext.request.contextPath}/rooms" 
            class="menu-link ${pageContext.request.requestURI.contains('rooms') ? 'active' : ''}">
             <span class="icon">🛏️</span> Sơ đồ phòng
@@ -33,10 +38,17 @@
                class="menu-link ${pageContext.request.requestURI.contains('room-management') ? 'active' : ''}">
                 <span class="icon">⚙️</span> Quản lý phòng
             </a>
+
+            <%-- Bổ sung Quản lý dịch vụ vào sidebar để đồng bộ với Dashboard [cite: 72] --%>
+            <a href="${pageContext.request.contextPath}/service-management" 
+               class="menu-link ${pageContext.request.requestURI.contains('service-management') ? 'active' : ''}">
+                <span class="icon">🍔</span> Quản lý dịch vụ
+            </a>
         </c:if>
     </div>
 
     <div class="sidebar-footer">
+        <%-- Sử dụng class .logout-btn đã có căn giữa sẵn trong CSS --%>
         <a href="${pageContext.request.contextPath}/login?action=logout" class="logout-btn">
             <span class="icon">🚪</span> Đăng xuất
         </a>

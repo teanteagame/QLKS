@@ -7,6 +7,7 @@
     <meta charset="UTF-8">
     <title>Báo cáo chuyên sâu - Hotel Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <%-- Nhúng thư viện Chart.js --%>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
@@ -17,50 +18,55 @@
         <main class="main-content">
             <h1>📊 Phân tích doanh thu & Hiệu suất</h1>
 
-            <%-- THANH LỌC THỜI GIAN --%>
-            <form action="statistics" method="get" class="report-filter-bar">
-                <div class="form-group">
-                    <label class="form-label">Từ ngày</label>
-                    <input type="date" name="startDate" class="input-field" value="${param.startDate}">
+            <%-- THANH LỌC THỜI GIAN (Sử dụng Palette chung) --%>
+            <form action="statistics" method="get" class="card" style="margin-bottom: 30px; padding: 20px;">
+                <div style="display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Từ ngày</label>
+                        <input type="date" name="startDate" class="input-field" value="${param.startDate}">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Đến ngày</label>
+                        <input type="date" name="endDate" class="input-field" value="${param.endDate}">
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="submit" class="btn btn-primary" style="height: 45px;">🔍 Áp dụng</button>
+                        <a href="statistics" class="btn btn-outline" style="height: 45px;">Làm mới</a>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Đến ngày</label>
-                    <input type="date" name="endDate" class="input-field" value="${param.endDate}">
-                </div>
-                <button type="submit" class="btn btn-info" style="height: 45px;">🔍 Áp dụng lọc</button>
-                <a href="statistics" class="btn" style="height: 45px; background: #eee; color: #333; line-height: 25px;">Làm mới</a>
             </form>
 
-            <%-- THỐNG KÊ CHI TIẾT THEO KHOẢNG --%>
-            <div class="stat-group-grid">
-                <div class="mini-stat-card revenue-room">
-                    <p>Tiền phòng</p>
-                    <h4><fmt:formatNumber value="${roomRevenue}" type="number"/> đ</h4>
+            <%-- KHỐI THỐNG KÊ TỔNG QUAN (Sử dụng grid-container và card) --%>
+            <div class="grid-container">
+                <div class="card border-accent">
+                    <p style="color: var(--gray); font-size: 0.9rem;">Tiền phòng</p>
+                    <h3 style="color: var(--accent);"><fmt:formatNumber value="${roomRevenue}" type="number"/> đ</h3>
                 </div>
-                <div class="mini-stat-card revenue-service">
-                    <p>Tiền dịch vụ</p>
-                    <h4><fmt:formatNumber value="${serviceRevenue}" type="number"/> đ</h4>
+                <div class="card border-warning">
+                    <p style="color: var(--gray); font-size: 0.9rem;">Tiền dịch vụ</p>
+                    <h3 style="color: var(--warning);"><fmt:formatNumber value="${serviceRevenue}" type="number"/> đ</h3>
                 </div>
-                <div class="mini-stat-card" style="border-left-color: #27ae60;">
-                    <p>Tổng cộng</p>
-                    <h4><fmt:formatNumber value="${roomRevenue + serviceRevenue}" type="number"/> đ</h4>
+                <div class="card border-success">
+                    <p style="color: var(--gray); font-size: 0.9rem;">Tổng cộng</p>
+                    <h3 style="color: var(--success);"><fmt:formatNumber value="${roomRevenue + serviceRevenue}" type="number"/> đ</h3>
                 </div>
-                <div class="mini-stat-card" style="border-left-color: #f39c12;">
-                    <p>Trung bình/Ngày</p>
-                    <h4><fmt:formatNumber value="${averageRevenue}" type="number"/> đ</h4>
+                <div class="card">
+                    <p style="color: var(--gray); font-size: 0.9rem;">Trung bình/Ngày</p>
+                    <h3><fmt:formatNumber value="${averageRevenue}" type="number"/> đ</h3>
                 </div>
             </div>
 
-            <div class="chart-grid">
-                <div class="chart-card">
-                    <h3>Biến động doanh thu theo thời gian</h3>
-                    <div class="chart-wrapper">
+            <%-- KHỐI BIỂU ĐỒ --%>
+            <div class="grid-container" style="grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));">
+                <div class="card" style="min-height: 400px;">
+                    <h3 style="margin-bottom: 20px;">Biến động doanh thu theo thời gian</h3>
+                    <div style="flex-grow: 1; position: relative;">
                         <canvas id="timeSeriesChart"></canvas>
                     </div>
                 </div>
-                <div class="chart-card">
-                    <h3>Cơ cấu doanh thu</h3>
-                    <div class="chart-wrapper">
+                <div class="card" style="min-height: 400px;">
+                    <h3 style="margin-bottom: 20px;">Cơ cấu doanh thu</h3>
+                    <div style="flex-grow: 1; position: relative;">
                         <canvas id="revenueSourceChart"></canvas>
                     </div>
                 </div>
@@ -68,51 +74,18 @@
         </main>
     </div>
 
+    <%-- NHÚNG LOGIC VẼ BIỂU ĐỒ TỪ FILE RIÊNG --%>
+    <script src="${pageContext.request.contextPath}/assets/js/chart-renderer.js"></script>
     <script>
-        // KIỂM TRA DỮ LIỆU ĐẦU VÀO (Sửa lỗi biểu đồ không hiển thị)
+        // Truyền dữ liệu từ Server sang JS [cite: 360-362]
         const labels = ${chartLabels != null ? chartLabels : '[]'};
         const dataValues = ${chartValues != null ? chartValues : '[]'};
+        const roomRevenue = ${roomRevenue};
+        const serviceRevenue = ${serviceRevenue};
 
-        if (labels.length === 0) {
-            console.warn("Dữ liệu biểu đồ trống hoặc sai định dạng.");
-        }
-
-        // 1. Biểu đồ đường (Line Chart) cho phép xem theo khoảng thời gian
-        new Chart(document.getElementById('timeSeriesChart'), {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Doanh thu (đ)',
-                    data: dataValues,
-                    borderColor: '#3498db',
-                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } }
-            }
-        });
-
-        // 2. Biểu đồ tròn so sánh Tiền phòng vs Tiền dịch vụ
-        new Chart(document.getElementById('revenueSourceChart'), {
-            type: 'pie',
-            data: {
-                labels: ['Tiền phòng', 'Tiền dịch vụ'],
-                datasets: [{
-                    data: [${roomRevenue}, ${serviceRevenue}],
-                    backgroundColor: ['#3498db', '#9b59b6']
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false
-            }
-        });
+        // Khởi tạo biểu đồ thông qua ChartRenderer
+        ChartRenderer.renderTimeSeries('timeSeriesChart', labels, dataValues);
+        ChartRenderer.renderRevenueSource('revenueSourceChart', roomRevenue, serviceRevenue);
     </script>
 </body>
 </html>

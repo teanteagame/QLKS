@@ -7,23 +7,27 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.ArrayList;
-import model.Service;
 
 @WebServlet(name = "ServiceServlet", urlPatterns = {"/service"})
 public class ServiceServlet extends HttpServlet {
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
-            throws ServletException, IOException {
-        int bookingId = Integer.parseInt(request.getParameter("bookingId"));
-        ServiceDAO serviceDAO = new ServiceDAO();
-        ArrayList<Service> services = serviceDAO.getAllAvailableServices();
+protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+        throws ServletException, IOException {
+    int bookingId = Integer.parseInt(request.getParameter("bookingId"));
+    String catIdStr = request.getParameter("catId");
+    int catId = (catIdStr != null) ? Integer.parseInt(catIdStr) : 0;
 
-        request.setAttribute("bookingId", bookingId);
-        request.setAttribute("services", services);
-        request.getRequestDispatcher("view/service.jsp").forward(request, response);
-    }
+    ServiceDAO dao = new ServiceDAO();
+    // Gửi danh sách danh mục để hiện menu lọc
+    request.setAttribute("categories", dao.getAllCategories());
+    // Gửi danh sách dịch vụ đã lọc
+    request.setAttribute("services", dao.getServicesByCategory(catId));
+    
+    request.setAttribute("bookingId", bookingId);
+    request.setAttribute("selectedCat", catId);
+    request.getRequestDispatcher("view/service.jsp").forward(request, response);
+}
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 

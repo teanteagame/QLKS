@@ -16,11 +16,15 @@ protected void doGet(HttpServletRequest request, HttpServletResponse response)
     RoomTypeDAO typeDAO = new RoomTypeDAO();
     String action = request.getParameter("action");
 
-    if ("edit".equals(action)) {
+    // Xử lý Khôi phục phòng
+    if ("restore".equals(action)) {
         int id = Integer.parseInt(request.getParameter("id"));
-        request.setAttribute("editRoom", roomDAO.getRoomById(id));
+        roomDAO.restoreRoom(id);
+        response.sendRedirect(request.getContextPath() + "/room-management?action=showDeleted");
+        return;
     }
-    
+
+    // Xử lý Xóa mềm (Đã làm ở bước trước)
     if ("delete".equals(action)) {
         int id = Integer.parseInt(request.getParameter("id"));
         roomDAO.deleteRoom(id);
@@ -28,7 +32,19 @@ protected void doGet(HttpServletRequest request, HttpServletResponse response)
         return;
     }
 
-    request.setAttribute("roomList", roomDAO.getAllRooms());
+    if ("edit".equals(action)) {
+        int id = Integer.parseInt(request.getParameter("id"));
+        request.setAttribute("editRoom", roomDAO.getRoomById(id));
+    }
+    
+    // Điều hướng hiển thị: Danh sách thường hoặc Danh sách đã xóa
+    if ("showDeleted".equals(action)) {
+        request.setAttribute("isDeletedView", true);
+        request.setAttribute("roomList", roomDAO.getDeletedRooms());
+    } else {
+        request.setAttribute("roomList", roomDAO.getAllRooms());
+    }
+
     request.setAttribute("typeList", typeDAO.getAllRoomTypes());
     request.getRequestDispatcher("view/room-management.jsp").forward(request, response);
 }
@@ -36,17 +52,34 @@ protected void doGet(HttpServletRequest request, HttpServletResponse response)
 @Override
 protected void doPost(HttpServletRequest request, HttpServletResponse response) 
         throws ServletException, IOException {
+    
     String idStr = request.getParameter("roomId");
     String roomNumber = request.getParameter("roomNumber");
     int roomTypeId = Integer.parseInt(request.getParameter("roomTypeId"));
     String status = request.getParameter("status");
+    
+    // 1. Lấy tên file ảnh từ Form
+    String imageUrl = request.getParameter("imageUrl");
+    
+    // 2. Xử lý giá trị mặc định nếu để trống
+    if (imageUrl == null || imageUrl.trim().isEmpty()) {
+        imageUrl = "default-room.jpg";
+    }
 
     RoomDAO dao = new RoomDAO();
-    if (idStr == null || idStr.isEmpty()) {
-        dao.addRoom(roomNumber, roomTypeId);
-    } else {
-        dao.updateRoom(Integer.parseInt(idStr), roomNumber, roomTypeId, status);
+    try {
+        if (idStr == null || idStr.isEmpty()) {
+            // Thêm mới (Gọi hàm DAO đã cập nhật tham số imageUrl)
+            dao.addRoom(roomNumber, roomTypeId, imageUrl);
+        } else {
+            // Cập nhật
+            int roomId = Integer.parseInt(idStr);
+            dao.updateRoom(roomId, roomNumber, roomTypeId, status, imageUrl);
+        }
+        response.sendRedirect(request.getContextPath() + "/room-management");
+    } catch (Exception e) {
+        request.setAttribute("error", "Lỗi xử lý dữ liệu: " + e.getMessage());
+        doGet(request, response);
     }
-    response.sendRedirect(request.getContextPath() + "/room-management");
 }
 }

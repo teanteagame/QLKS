@@ -10,40 +10,46 @@
 </head>
 <body>
     <div class="admin-layout">
-        <%-- Nhúng Sidebar điều hướng --%>
         <jsp:include page="common/navbar.jsp"/>
 
         <main class="main-content">
-            <div class="page-header">
-                <h1>👥 Quản lý đội ngũ nhân viên</h1>
+            <%-- Header trang --%>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h1>👥 Quản lý đội ngũ nhân viên 
+                    <c:if test="${isInactiveView}"><span style="color: var(--danger);">(Đã nghỉ)</span></c:if>
+                </h1>
                 <div style="display: flex; gap: 10px;">
-                    <a href="${pageContext.request.contextPath}/employee-management?action=showInactive" class="btn" style="background: #f8d7da; color: #721c24;">
-                        Nhân viên đã nghỉ
-                    </a>
-                    <a href="${pageContext.request.contextPath}/dashboard" class="btn" style="background: #eee; color: #333;">
-                        ← Dashboard
-                    </a>
+                    <c:choose>
+                        <c:when test="${isInactiveView}">
+                            <a href="employee-management" class="btn btn-primary">🔙 Quay lại danh sách chính</a>
+                        </c:when>
+                        <c:otherwise>
+                            <a href="employee-management?action=showInactive" class="btn btn-outline" style="color: var(--danger);">
+                                🚫 Xem nhân viên đã nghỉ
+                            </a>
+                            <a href="dashboard" class="btn btn-outline">← Dashboard</a>
+                        </c:otherwise>
+                    </c:choose>
                 </div>
             </div>
 
             <c:if test="${not empty error}">
-                <div class="alert-error" style="margin-bottom: 20px;">
+                <div class="badge status-danger" style="display: block; margin-bottom: 25px; padding: 12px; text-transform: none; text-align: center;">
                     ⚠️ ${error}
                 </div>
             </c:if>
 
-            <%-- PHẦN 1: BIỂU MẪU NHẬP LIỆU (THÊM / SỬA) --%>
-            <div class="mgmt-card" style="border-left: 5px solid var(--accent-color);">
-                <h3>${empty editEmp ? '➕ Đăng ký nhân viên mới' : '📝 Cập nhật hồ sơ nhân viên'}</h3>
-                
-                <form action="${pageContext.request.contextPath}/employee-management" method="post" class="grid-form">
-                    <%-- SỬA LỖI: Dùng employeeId thay vì accountId --%>
+            <%-- PHẦN 1: FORM THÊM/SỬA (Sử dụng card và grid-container) --%>
+            <div class="card border-accent" style="margin-bottom: 30px;">
+                <h3 style="margin-bottom: 20px;">${empty editEmp ? '➕ Đăng ký nhân viên mới' : '📝 Cập nhật hồ sơ nhân viên'}</h3>
+
+                <form action="employee-management" method="post" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
                     <input type="hidden" name="employeeId" value="${editEmp.employeeId}">
-                    
+
                     <div class="form-group">
                         <label class="form-label">Họ và Tên</label>
                         <input type="text" name="fullName" class="input-field" 
-                               value="${editEmp.fullName}" placeholder="Ví dụ: Nguyễn Văn A" required>
+                               value="${editEmp.fullName}" placeholder="Nguyễn Văn A" required>
                     </div>
 
                     <div class="form-group">
@@ -55,7 +61,19 @@
                     <div class="form-group">
                         <label class="form-label">Số điện thoại</label>
                         <input type="text" name="phone" class="input-field" 
-                               value="${editEmp.phone}" placeholder="Số liên lạc..." required>
+                               value="${editEmp.phone}" placeholder="090..." required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Mật khẩu hệ thống</label>
+                        <input type="password" name="password" class="input-field" 
+                               placeholder="${empty editEmp ? 'Mật khẩu khởi tạo' : 'Để trống nếu không đổi'}" 
+                               ${empty editEmp ? 'required' : ''}>
+                        <c:if test="${not empty editEmp}">
+                            <small style="color: var(--warning); font-size: 0.8rem; display: block; margin-top: 5px;">
+                                ⚠️ Chỉ nhập nếu muốn thay đổi mật khẩu.
+                            </small>
+                        </c:if>
                     </div>
 
                     <div class="form-group">
@@ -66,9 +84,9 @@
                         </select>
                     </div>
 
-                    <div class="form-group full-width" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+                    <div style="grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
                         <c:if test="${not empty editEmp}">
-                            <a href="${pageContext.request.contextPath}/employee-management" class="btn" style="background: #eee; color: #333;">HỦY</a>
+                            <a href="employee-management" class="btn btn-outline">HỦY</a>
                         </c:if>
                         <button type="submit" class="btn btn-success" style="min-width: 150px;">
                             ${empty editEmp ? 'LƯU NHÂN VIÊN' : 'CẬP NHẬT HỒ SƠ'}
@@ -77,10 +95,9 @@
                 </form>
             </div>
 
-            <%-- PHẦN 2: BẢNG DANH SÁCH NHÂN VIÊN --%>
-            <div class="mgmt-card">
-                <h3>📋 Danh sách tài khoản nhân sự ${isInactiveView ? '(Đã nghỉ việc)' : '(Đang làm việc)'}</h3>
-                <table class="custom-table">
+            <%-- PHẦN 2: BẢNG DANH SÁCH --%>
+            <div class="table-responsive">
+                <table class="custom-table" id="employeeTable">
                     <thead>
                         <tr>
                             <th>Họ và Tên</th>
@@ -92,49 +109,41 @@
                     </thead>
                     <tbody>
                         <c:forEach items="${employeeList}" var="e">
-                            <%-- SỬA LỖI: So sánh bằng employeeId để highlight dòng đang sửa --%>
-                            <tr class="${editEmp.employeeId == e.employeeId ? 'row-highlight' : ''}">
+                            <tr style="${editEmp.employeeId == e.employeeId ? 'background: #f0f7ff;' : ''}">
                                 <td><strong>${e.fullName}</strong></td>
                                 <td>${e.email}</td>
                                 <td>${e.phone}</td>
                                 <td style="text-align: center;">
-                                    <span class="role-badge ${e.roleId == 1 ? 'role-manager' : 'role-staff'}" 
-                                          style="padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">
+                                    <span class="badge ${e.roleId == 1 ? 'status-warning' : 'status-active'}">
                                         ${e.roleId == 1 ? 'MANAGER' : 'STAFF'}
                                     </span>
                                 </td>
                                 <td style="text-align: center;">
                                     <c:choose>
                                         <c:when test="${not isInactiveView}">
-                                            <%-- Giao diện nhân viên đang làm việc --%>
-                                            <a href="${pageContext.request.contextPath}/employee-management?action=edit&id=${e.employeeId}" 
-                                               class="action-link btn-edit">Sửa</a>
-                                            
-                                            <%-- Chặn không cho Manager tự xóa chính mình --%>
+                                            <a href="employee-management?action=edit&id=${e.employeeId}" class="btn btn-outline" style="padding: 5px 12px; font-size: 0.8rem;">Sửa</a>
                                             <c:choose>
-                                                <c:when test="${sessionScope.account.accountId != e.employeeId}">
-                                                    <a href="${pageContext.request.contextPath}/employee-management?action=delete&id=${e.employeeId}" 
-                                                       class="action-link btn-delete" 
-                                                       onclick="return confirm('Xác nhận cho nhân viên ${e.fullName} nghỉ việc?')">Xóa</a>
+                                                <c:when test="${sessionScope.account.employeeId != e.employeeId}">
+                                                    <a href="employee-management?action=delete&id=${e.employeeId}" 
+                                                       class="btn btn-outline" style="padding: 5px 12px; font-size: 0.8rem; color: var(--danger);"
+                                                       onclick="return confirm('Cho nhân viên ${e.fullName} nghỉ việc?')">Xóa</a>
                                                 </c:when>
                                                 <c:otherwise>
-                                                    <span style="color: #ccc; font-size: 0.8rem; margin-left: 10px;" title="Tài khoản đang đăng nhập">(Đang trực)</span>
+                                                    <span style="color: var(--gray); font-size: 0.8rem; margin-left: 10px;">(Đang trực)</span>
                                                 </c:otherwise>
                                             </c:choose>
                                         </c:when>
                                         <c:otherwise>
-                                            <%-- Giao diện nhân viên đã nghỉ --%>
-                                            <a href="${pageContext.request.contextPath}/employee-management?action=reactivate&id=${e.employeeId}" 
-                                               class="btn btn-success" style="padding: 4px 8px; font-size: 0.8rem;">Kích hoạt lại</a>
+                                            <a href="employee-management?action=reactivate&id=${e.employeeId}" 
+                                               class="btn btn-success" style="padding: 5px 12px; font-size: 0.8rem;">Kích hoạt lại</a>
                                         </c:otherwise>
                                     </c:choose>
                                 </td>
                             </tr>
                         </c:forEach>
-                        
                         <c:if test="${empty employeeList}">
                             <tr>
-                                <td colspan="5" style="text-align: center; padding: 40px; color: #999;">
+                                <td colspan="5" style="text-align: center; padding: 40px; color: var(--gray);">
                                     Chưa có dữ liệu nhân viên để hiển thị.
                                 </td>
                             </tr>
@@ -144,11 +153,8 @@
             </div>
         </main>
     </div>
-
-    <style>
-        .row-highlight { background-color: #fffde7 !important; outline: 2px solid var(--warning-color); }
-        .role-manager { background-color: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
-        .role-staff { background-color: #e0f2fe; color: #075985; border: 1px solid #0ea5e9; }
-    </style>
+    
+    <%-- Nhúng công cụ xử lý bảng --%>
+    <script src="${pageContext.request.contextPath}/assets/js/table-manager.js"></script>
 </body>
 </html>

@@ -5,157 +5,122 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý Dịch vụ - Hotel Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
 <body>
     <div class="admin-layout">
-        <%-- Nhúng thanh điều hướng Sidebar --%>
         <jsp:include page="common/navbar.jsp"/>
 
         <main class="main-content">
-            <div class="page-header">
+            <%-- Header trang --%>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
                 <h1>🍔 Quản lý Danh mục Dịch vụ</h1>
-                <a href="${pageContext.request.contextPath}/dashboard" class="btn" style="background: #eee; color: #333;">
-                    ← Dashboard
-                </a>
+                <a href="dashboard" class="btn btn-outline">← Dashboard</a>
             </div>
 
-            <%-- PHẦN 1: BIỂU MẪU NHẬP LIỆU (THÊM HOẶC SỬA) --%>
-            <div class="mgmt-card" style="border-left: 5px solid var(--accent-color);">
-                <h3>
-                    <c:choose>
-                        <c:when test="${not empty editService}">
-                            📝 Cập nhật thông tin dịch vụ (Mã: #${editService.serviceId})
-                        </c:when>
-                        <c:otherwise>
-                            ➕ Thêm dịch vụ mới
-                        </c:otherwise>
-                    </c:choose>
-                </h3>
+            <%-- PHẦN 1: FORM THÊM/SỬA (Sử dụng card và grid layout) --%>
+            <div class="card border-accent" style="margin-bottom: 30px;">
+                <h3 style="margin-bottom: 20px;">${not empty editService ? '📝 Cập nhật dịch vụ' : '➕ Thêm dịch vụ mới'}</h3>
                 
-                <form action="${pageContext.request.contextPath}/service-management" method="post" class="grid-form">
-                    <%-- Input ẩn để Servlet phân biệt Add (trống) và Update (có ID) --%>
+                <form action="service-management" method="post" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
                     <input type="hidden" name="serviceId" value="${editService.serviceId}">
-                    
+
                     <div class="form-group">
                         <label class="form-label">Tên dịch vụ</label>
-                        <input type="text" name="serviceName" class="input-field" 
-                               value="${editService.serviceName}" placeholder="Ví dụ: Nước suối, Mì ly..." required>
+                        <input type="text" name="serviceName" class="input-field" value="${editService.serviceName}" placeholder="Ví dụ: Coca Cola" required>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Mã phân loại (Category ID)</label>
-                        <input type="number" name="categoryId" class="input-field" 
-                               value="${not empty editService ? editService.categoryId : ''}" 
-                               placeholder="Nhập mã loại dịch vụ..." required>
+                        <label class="form-label">Phân loại</label>
+                        <select name="categoryId" class="input-field" required>
+                            <c:forEach items="${categories}" var="cat">
+                                <option value="${cat.key}" ${editService.categoryId == cat.key ? 'selected' : ''}>
+                                    ${cat.value}
+                                </option>
+                            </c:forEach>
+                        </select>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Đơn vị tính</label>
-                        <input type="text" name="unit" class="input-field" 
-                               value="${editService.unit}" placeholder="Chai, Cái, Lần..." required>
+                        <label class="form-label">Tên file ảnh (trong /services/)</label>
+                        <input type="text" name="imageUrl" class="input-field" 
+                               value="${editService.imageUrl}" placeholder="Ví dụ: coca.jpg">
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Đơn giá</label>
-                        <div class="price-input-group">
-                            <input type="number" name="price" class="input-field" 
-                                   value="${editService.price}" step="500" required>
-                        </div>
+                        <label class="form-label">Đơn vị</label>
+                        <input type="text" name="unit" class="input-field" value="${editService.unit}" placeholder="Lon, Cái, Đĩa..." required>
                     </div>
 
-                    <div class="form-group full-width" style="display: flex; align-items: center; justify-content: space-between; gap: 15px; background: #f9f9f9; padding: 15px; border-radius: 8px;">
-                        <div>
-                            <label class="form-label" style="display: inline-flex; align-items: center; cursor: pointer; margin: 0;">
-                                <input type="checkbox" name="status" value="true" 
-                                       ${(empty editService or editService.status) ? 'checked' : ''} 
-                                       style="width: 20px; height: 20px; margin-right: 10px;">
-                                <span>Đang kinh doanh</span>
-                            </label>
-                        </div>
-                        
-                        <div style="display: flex; gap: 10px;">
-                            <c:if test="${not empty editService}">
-                                <a href="${pageContext.request.contextPath}/service-management" class="btn" style="background: #eee; color: #333;">
-                                    HỦY BỎ
-                                </a>
-                            </c:if>
-                            <button type="submit" class="btn btn-success" style="min-width: 150px;">
-                                ${not empty editService ? 'CẬP NHẬT' : 'LƯU DỊCH VỤ'}
-                            </button>
-                        </div>
+                    <div class="form-group">
+                        <label class="form-label">Giá tiền (VNĐ)</label>
+                        <input type="number" name="price" class="input-field" value="${editService.price}" required>
+                    </div>
+
+                    <div class="form-group" style="display: flex; align-items: center; gap: 10px; padding-top: 35px;">
+                        <input type="checkbox" name="status" id="sStatus" style="width: 18px; height: 18px;" ${(editService == null || editService.status) ? 'checked' : ''}>
+                        <label for="sStatus" style="font-weight: 600; cursor: pointer;">Đang kinh doanh</label>
+                    </div>
+
+                    <div style="grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+                        <c:if test="${not empty editService}">
+                            <a href="service-management" class="btn btn-outline">HỦY</a>
+                        </c:if>
+                        <button type="submit" class="btn btn-success" style="min-width: 150px;">LƯU DỊCH VỤ</button>
                     </div>
                 </form>
             </div>
 
-            <%-- PHẦN 2: BẢNG DANH SÁCH DỊCH VỤ --%>
-            <div class="mgmt-card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h3 style="margin: 0; border: none;">📋 Danh sách dịch vụ hiện có</h3>
-                    <span style="font-size: 0.85rem; color: #888;">Tổng cộng: ${serviceList.size()} dịch vụ</span>
-                </div>
-                
-                <table class="custom-table">
+            <%-- PHẦN 2: BẢNG DANH SÁCH (Sử dụng table-responsive và custom-table) --%>
+            <div class="table-responsive">
+                <table class="custom-table" id="serviceTable">
                     <thead>
                         <tr>
-                            <th>Mã loại</th>
+                            <th style="width: 80px;">Ảnh</th>
                             <th>Tên dịch vụ</th>
-                            <th>ĐVT</th>
-                            <th style="text-align: right;">Đơn giá (VNĐ)</th>
-                            <th style="text-align: center;">Trạng thái</th>
+                            <th>Phân loại</th>
+                            <th>Đơn vị</th>
+                            <th style="text-align: right;">Đơn giá</th>
                             <th style="text-align: center;">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>
                         <c:forEach items="${serviceList}" var="s">
-                            <tr class="${editService.serviceId == s.serviceId ? 'row-highlight' : ''}">
-                                <td><span style="color: #999; font-family: monospace;">#${s.categoryId}</span></td>
+                            <tr>
                                 <td>
-                                    <div style="display: flex; align-items: center;">
-                                        <div class="service-icon-placeholder" style="width: 30px; height: 30px; background: #f0f0f0; border-radius: 4px; display: flex; align-items: center; justify-content: center; margin-right: 10px;">
-                                            📦
-                                        </div>
-                                        <strong>${s.serviceName}</strong>
-                                    </div>
+                                    <img src="${pageContext.request.contextPath}/assets/images/services/${not empty s.imageUrl ? s.imageUrl : 'default-service.jpg'}" 
+                                         style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border-color);">
                                 </td>
-                                <td>${s.unit}</td>
-                                <td style="text-align: right; font-weight: 600; color: var(--accent-color);">
-                                    <fmt:formatNumber value="${s.price}" type="number" groupingUsed="true"/>
-                                </td>
-                                <td style="text-align: center;">
-                                    <span class="status-badge ${s.status ? 'status-active' : 'status-inactive'}" 
-                                          style="padding: 4px 10px; border-radius: 12px; font-size: 0.8rem;">
-                                        ${s.status ? 'Kinh doanh' : 'Ngừng'}
+                                <td><strong>${s.serviceName}</strong></td>
+                                <td>
+                                    <span class="badge" style="background: #f0f2f5; color: var(--secondary);">
+                                        ${categories[s.categoryId]}
                                     </span>
                                 </td>
+                                <td>${s.unit}</td>
+                                <td style="text-align: right; font-weight: bold; color: var(--accent);">
+                                    <fmt:formatNumber value="${s.price}" type="number"/> đ
+                                </td>
                                 <td style="text-align: center;">
-                                    <a href="${pageContext.request.contextPath}/service-management?action=edit&id=${s.serviceId}" 
-                                       class="action-link btn-edit">Sửa</a>
-                                    <a href="${pageContext.request.contextPath}/service-management?action=delete&id=${s.serviceId}" 
-                                       class="action-link btn-delete" 
-                                       onclick="return confirm('Bạn có chắc chắn muốn xóa dịch vụ: ${s.serviceName}?')">Xóa</a>
+                                    <div style="display: flex; gap: 8px; justify-content: center;">
+                                        <a href="service-management?action=edit&id=${s.serviceId}" 
+                                           class="btn btn-outline" style="padding: 5px 12px; font-size: 0.8rem;">Sửa</a>
+                                        <a href="service-management?action=delete&id=${s.serviceId}" 
+                                           class="btn btn-outline" style="padding: 5px 12px; font-size: 0.8rem; color: var(--danger);"
+                                           onclick="return confirm('Xác nhận xóa dịch vụ ${s.serviceName}?')">Xóa</a>
+                                    </div>
                                 </td>
                             </tr>
                         </c:forEach>
-                        
-                        <c:if test="${empty serviceList}">
-                            <tr>
-                                <td colspan="6" style="text-align: center; padding: 40px; color: #999;">
-                                    Hiện chưa có dịch vụ nào trong danh mục.
-                                </td>
-                            </tr>
-                        </c:if>
                     </tbody>
                 </table>
             </div>
         </main>
     </div>
 
-    <style>
-       
-    </style>
+    <%-- Nhúng công cụ xử lý bảng --%>
+    <script src="${pageContext.request.contextPath}/assets/js/table-manager.js"></script>
 </body>
 </html>

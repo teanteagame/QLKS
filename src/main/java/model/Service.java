@@ -8,8 +8,12 @@ public class Service {
     private double price;
     private boolean status;
 
+    private String imageUrl;
+
     public Service() {}
 
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     public int getServiceId() { return serviceId; }
     public void setServiceId(int serviceId) { this.serviceId = serviceId; }
     public String getServiceName() { return serviceName; }

@@ -6,42 +6,23 @@
     <meta charset="UTF-8">
     <title>Hotel Management System</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <%-- Chỉ sử dụng 1 file CSS duy nhất --%>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
-    <style>
-        .welcome-screen {
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background: var(--primary);
-            color: white;
-        }
-        .loader {
-            border: 4px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top: 4px solid white;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    </style>
 </head>
 <body>
     <div class="welcome-screen">
         <div class="loader"></div>
         <h2>Đang kết nối hệ thống...</h2>
         
-        <c:choose>
-            <c:when test="${not empty sessionScope.account}">
-                <script>setTimeout(() => { window.location.href = 'rooms'; }, 500);</script>
-            </c:when>
-            <c:otherwise>
-                <script>setTimeout(() => { window.location.href = 'login'; }, 500);</script>
-            </c:otherwise>
-        </c:choose>
+        <%-- Truyền trạng thái đăng nhập qua thuộc tính ẩn để JS xử lý --%>
+        <input type="hidden" id="isLoggedIn" value="${not empty sessionScope.account}">
     </div>
+
+    <%-- Nhúng file JS xử lý chung --%>
+    <script src="${pageContext.request.contextPath}/assets/js/common.js"></script>
+    <script>
+        // Khởi tạo điều hướng từ file common.js
+        CommonUtils.handleInitialRedirect('isLoggedIn');
+    </script>
 </body>
 </html>

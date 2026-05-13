@@ -7,8 +7,13 @@ public class Room {
     private int bookingId;
        
     private RoomType roomType; 
+        private String imageUrl;
 
     public Room() {}
+    
+
+public String getImageUrl() { return imageUrl; }
+public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
     public int getRoomId() { return roomId; }
     public void setRoomId(int roomId) { this.roomId = roomId; }

@@ -27,6 +27,7 @@ controller\RoomTypeManageServlet.class
 dao\ReportDAO.class
 filter\AuthenticationFilter.class
 model\Room.class
+dao\ServiceDAO$ServiceUsage.class
 model\RoomType.class
 com\mycompany\qlks\resources\JakartaEE11Resource.class
 model\Service.class

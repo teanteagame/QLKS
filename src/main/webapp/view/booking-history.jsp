@@ -14,39 +14,41 @@
             <jsp:include page="common/navbar.jsp"/>
 
             <main class="main-content">
-                <div class="search-header">
+                <%-- Header và Ô tìm kiếm nhanh --%>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
                     <h1>🕒 Lịch sử giao dịch</h1>
-
-                    <div class="search-input-group">
-                        <input type="text" id="historySearch" placeholder="Tìm tên khách, số phòng, loại phòng...">
+                    <div style="width: 350px;">
+                        <input type="text" id="historySearch" class="input-field" 
+                               placeholder="Tìm tên khách, số phòng, loại phòng...">
                     </div>
                 </div>
 
-                <div class="history-container">
+                <%-- Bảng dữ liệu (Sử dụng .table-responsive và .custom-table) --%>
+                <div class="table-responsive">
                     <table class="custom-table" id="historyTable">
                         <thead>
                             <tr>
-                                <%-- Gắn hàm sortTable(index) vào các cột cần sắp xếp --%>
-                                <th class="sortable" onclick="sortTable(0)">Mã Đơn</th>
-                                <th class="sortable" onclick="sortTable(1)">Khách hàng</th>
-                                <th class="sortable" onclick="sortTable(2)">Phòng</th>
+                                <%-- Gọi logic từ TableManager trong file JS riêng --%>
+                                <th style="cursor: pointer;" onclick="TableManager.sortTable('historyTable', 0)">Mã Đơn</th>
+                                <th style="cursor: pointer;" onclick="TableManager.sortTable('historyTable', 1)">Khách hàng</th>
+                                <th style="cursor: pointer;" onclick="TableManager.sortTable('historyTable', 2)">Phòng</th>
                                 <th>Loại hình</th>
-                                <th class="sortable" onclick="sortTable(4)">Ngày nhận</th>
-                                <th class="sortable" onclick="sortTable(5)">Ngày thanh toán</th>
-                                <th class="sortable" onclick="sortTable(6)" style="text-align: right;">Tổng tiền (VNĐ)</th>
+                                <th style="cursor: pointer;" onclick="TableManager.sortTable('historyTable', 4, 'date')">Ngày nhận</th>
+                                <th style="cursor: pointer;" onclick="TableManager.sortTable('historyTable', 5, 'date')">Ngày thanh toán</th>
+                                <th style="cursor: pointer; text-align: right;" onclick="TableManager.sortTable('historyTable', 6, 'number')">Tổng tiền (VNĐ)</th>
                             </tr>
                         </thead>
                         <tbody>
                             <c:forEach items="${historyList}" var="h">
                                 <tr>
-                                    <td><span style="color: #888; font-family: monospace;">#${h.bookingId}</span></td>
+                                    <td><span style="color: var(--gray); font-family: monospace;">#${h.bookingId}</span></td>
                                     <td><strong>${h.customerName}</strong></td>
                                     <td>Phòng ${h.roomNumber}</td>
-                                    <td><span class="badge" style="background: #eef2f7; color: #34495e;">${h.roomType}</span></td>
-                                    <td style="font-size: 0.85rem; color: #666;">
+                                    <td><span class="badge" style="background: #eef2f7; color: var(--secondary);">${h.roomType}</span></td>
+                                    <td style="font-size: 0.85rem; color: var(--gray);">
                                         <fmt:formatDate value="${h.checkIn}" pattern="dd/MM/yyyy HH:mm"/>
                                     </td>
-                                    <td style="font-size: 0.85rem; color: #666;">
+                                    <td style="font-size: 0.85rem; color: var(--gray);">
                                         <c:choose>
                                             <c:when test="${not empty h.paymentDate}">
                                                 <fmt:formatDate value="${h.paymentDate}" pattern="dd/MM/yyyy HH:mm"/>
@@ -56,7 +58,7 @@
                                             </c:otherwise>
                                         </c:choose>
                                     </td>
-                                    <td class="price-cell">
+                                    <td style="text-align: right; font-weight: 600; color: var(--accent);">
                                         <fmt:formatNumber value="${h.roomPrice}" type="number" groupingUsed="true"/>
                                     </td>
                                 </tr>
@@ -64,7 +66,7 @@
 
                             <c:if test="${empty historyList}">
                                 <tr id="noDataRow">
-                                    <td colspan="7" style="text-align: center; padding: 50px; color: #999;">
+                                    <td colspan="7" style="text-align: center; padding: 50px; color: var(--gray);">
                                         📭 Chưa có lịch sử giao dịch nào được ghi nhận.
                                     </td>
                                 </tr>
@@ -73,88 +75,17 @@
                     </table>
                 </div>
 
-                <p style="margin-top: 20px; color: #7f8c8d; font-size: 0.9rem;">
-                    <em>* Dữ liệu được sắp xếp theo thời gian thanh toán mới nhất.</em>
+                <p style="margin-top: 25px; color: var(--gray); font-size: 0.85rem;">
+                    <em>* Dữ liệu được sắp xếp mặc định theo thời gian thanh toán mới nhất. Nhấn vào tiêu đề cột để sắp xếp lại.</em>
                 </p>
             </main>
         </div>
 
-        <%-- SCRIPT TÌM KIẾM NHANH --%>
+        <%-- NHÚNG LOGIC XỬ LÝ BẢNG TỪ FILE RIÊNG --%>
+        <script src="${pageContext.request.contextPath}/assets/js/table-manager.js"></script>
         <script>
-            // Hàm tìm kiếm (đã có từ trước)
-            document.getElementById('historySearch').addEventListener('keyup', function () {
-                let filter = this.value.toLowerCase();
-                let rows = document.querySelectorAll('#historyTable tbody tr:not(#noDataRow)');
-                rows.forEach(row => {
-                    let text = row.textContent.toLowerCase();
-                    row.style.display = text.includes(filter) ? '' : 'none';
-                });
-            });
-
-            // HÀM SẮP XẾP BẢNG (MỚI)
-            function sortTable(n) {
-                let table = document.getElementById("historyTable");
-                let rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
-                switching = true;
-                dir = "asc";
-
-                // Xóa các class asc/desc cũ ở các header khác
-                let headers = table.querySelectorAll('th.sortable');
-                headers.forEach(h => {
-                    if (h !== headers[n])
-                        h.classList.remove('asc', 'desc');
-                });
-
-                while (switching) {
-                    switching = false;
-                    rows = table.rows;
-                    // Lặp qua các hàng dữ liệu (bỏ qua header và hàng 'noData')
-                    for (i = 1; i < (rows.length - 1); i++) {
-                        if (rows[i].id === "noDataRow")
-                            continue;
-                        shouldSwitch = false;
-                        x = rows[i].getElementsByTagName("TD")[n];
-                        y = rows[i + 1].getElementsByTagName("TD")[n];
-
-                        let xVal = x.innerText.toLowerCase().trim();
-                        let yVal = y.innerText.toLowerCase().trim();
-
-                        // Logic xử lý theo loại dữ liệu của từng cột
-                        if (n === 6) { // Cột Tổng tiền: Chuyển về số để so sánh
-                            xVal = parseFloat(xVal.replace(/,/g, '')) || 0;
-                            yVal = parseFloat(yVal.replace(/,/g, '')) || 0;
-                        } else if (n === 4 || n === 5) { // Cột Ngày tháng (dd/mm/yyyy): Đảo ngược để so sánh chuỗi
-                            xVal = xVal.split(' ')[0].split('/').reverse().join('');
-                            yVal = yVal.split(' ')[0].split('/').reverse().join('');
-                        }
-
-                        if (dir == "asc") {
-                            if (xVal > yVal) {
-                                shouldSwitch = true;
-                                break;
-                            }
-                        } else if (dir == "desc") {
-                            if (xVal < yVal) {
-                                shouldSwitch = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (shouldSwitch) {
-                        rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-                        switching = true;
-                        switchcount++;
-                    } else {
-                        if (switchcount == 0 && dir == "asc") {
-                            dir = "desc";
-                            switching = true;
-                        }
-                    }
-                }
-                // Cập nhật icon mũi tên cho header đang chọn
-                headers[n].classList.toggle('asc', dir === 'asc');
-                headers[n].classList.toggle('desc', dir === 'desc');
-            }
+            // Kích hoạt tính năng tìm kiếm nhanh
+            TableManager.initSearch('historySearch', 'historyTable');
         </script>
     </body>
 </html>
