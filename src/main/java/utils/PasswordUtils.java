@@ -9,7 +9,7 @@ public class PasswordUtils {
         if (inputPassword == null || dbPassword == null) {
             return false;
         }
-        // So sánh trực tiếp hai chuỗi văn bản
+       
         return inputPassword.equals(dbPassword);
     }
 }
